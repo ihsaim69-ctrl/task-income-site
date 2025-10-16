@@ -1,115 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ফ্রি টাস্ক ইনকাম</title>
-<style>
-  body{font-family:system-ui; padding:12px; max-width:900px; margin:auto; background:#f4f4f4}
-  .card{background:#fff;padding:12px;border-radius:10px;margin:10px 0;box-shadow:0 6px 18px rgba(0,0,0,.06)}
-  input,button{display:block;width:100%;padding:10px;margin:6px 0}
-  .btn{background:#0ea5a4;color:white;border:0;border-radius:8px;cursor:pointer}
-  .small{font-size:13px;color:#6b7280}
-  .adsense{background:#d1f5f4;padding:20px;text-align:center;color:#0b6464;font-weight:bold;margin:10px 0;border-radius:8px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting...</title>
+  <script>
+    // index.html খোলার সাথে সাথেই login.html এ পাঠাবে
+    window.location.href = "login.html";
+  </script>
 </head>
 <body>
-<h1>ফ্রি টাস্ক ইনকাম</h1>
-
-<div class="card" id="auth">
-  <h3>সাইন-আপ / লগইন</h3>
-  <input id="username" placeholder="ইউজারনেম লিখুন">
-  <input id="ref" placeholder="রেফারাল কোড (যদি থাকে)">
-  <button class="btn" onclick="signup()">সাইন-আপ / লগইন</button>
-  <div class="small">প্রথমবার লগইন করলে নতুন ইউজার তৈরি হবে।</div>
-</div>
-
-<div class="card" id="profile" style="display:none">
-  <strong id="meName"></strong> — <span id="meRef"></span>
-  <div class="small">Points: <span id="mePoints">0</span> | Balance: <span id="meBal">0</span></div>
-  <button class="btn" onclick="logout()">লগআউট</button>
-</div>
-
-<div class="adsense">AdSense Placeholder (Top)</div>
-
-<div class="card" id="tasks" style="display:none">
-  <h3>টাস্ক</h3>
-  <div id="taskList"></div>
-</div>
-
-<div class="adsense">AdSense Placeholder (Bottom)</div>
-
-<script>
-let me = null;
-
-// Utilities
-function read(){return JSON.parse(localStorage.getItem('task_site')||'{"users":[],"tasks":[{"id":"t1","title":"প্রোফাইল পূরণ কর","desc":"প্রোফাইল পূরণ করলে 10 পয়েন্ট","reward":10},{"id":"t2","title":"সোশ্যাল শেয়ার কর","desc":"শেয়ার করলে 15 পয়েন্ট","reward":15},{"id":"t3","title":"রিভিউ লেখ","desc":"রিভিউ দিলে 20 পয়েন্ট","reward":20}]}')}
-function write(data){localStorage.setItem('task_site', JSON.stringify(data))}
-
-function signup(){
-  const username = document.getElementById('username').value.trim();
-  const ref = document.getElementById('ref').value.trim();
-  if(!username){alert('Username লাগবে'); return;}
-  let state = read();
-  let user = state.users.find(u=>u.username===username);
-  if(!user){
-    const code = username.toLowerCase().replace(/\s+/g,'') + Math.floor(Math.random()*1000);
-    user = {id:Date.now(),username,refCode:code,referredBy:ref||null,points:0,balance:0};
-    state.users.push(user);
-    // referral bonus
-    if(ref){
-      const refUser = state.users.find(u=>u.refCode===ref);
-      if(refUser){ refUser.balance += 20; }
-    }
-    write(state);
-  }
-  me = user;
-  localStorage.setItem('me', JSON.stringify(me));
-  renderAll();
-}
-
-function logout(){ localStorage.removeItem('me'); me=null; renderAll(); }
-
-function renderAll(){
-  const m = localStorage.getItem('me'); me = m?JSON.parse(m):null;
-  document.getElementById('auth').style.display = me?'none':'block';
-  document.getElementById('profile').style.display = me?'block':'none';
-  document.getElementById('tasks').style.display = me?'block':'none';
-  if(me){
-    document.getElementById('meName').textContent = me.username;
-    document.getElementById('meRef').textContent = 'Ref: ?ref='+me.refCode;
-    document.getElementById('mePoints').textContent = me.points;
-    document.getElementById('meBal').textContent = me.balance;
-    loadTasks();
-  }
-}
-
-function loadTasks(){
-  const state = read();
-  const tcontainer = document.getElementById('taskList');
-  tcontainer.innerHTML='';
-  state.tasks.forEach(t=>{
-    const div = document.createElement('div');
-    div.style.border='1px solid #eee'; div.style.padding='6px'; div.style.margin='6px 0';
-    div.innerHTML = `<strong>${t.title}</strong><div class="small">${t.desc}</div><button onclick="completeTask('${t.id}')">Complete (${t.reward}pt)</button>`;
-    tcontainer.appendChild(div);
-  });
-}
-
-function completeTask(taskId){
-  const state = read();
-  const t = state.tasks.find(x=>x.id==taskId);
-  if(!t) return;
-  me.points += t.reward;
-  me.balance += t.reward;
-  const idx = state.users.findIndex(u=>u.id==me.id); state.users[idx]=me;
-  write(state);
-  localStorage.setItem('me', JSON.stringify(me));
-  alert('Completed: '+t.title);
-  renderAll();
-}
-
-renderAll();
-</script>
+  <p>Redirecting to login page...</p>
 </body>
 </html>
