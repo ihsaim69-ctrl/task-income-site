@@ -1,44 +1,30 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login - Task Income</title>
 </head>
 <body>
   <h2>Login</h2>
-  <input type="email" id="email" placeholder="Email"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
-  <button onclick="login()">Login</button>
-  <p id="error" style="color:red"></p>
+  <input id="email" type="email" placeholder="Email" /><br>
+  <input id="password" type="password" placeholder="Password" /><br>
+  <button id="login">Login</button>
+  <p id="msg" style="color:red;"></p>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { auth, signInWithEmailAndPassword } from "./firebase.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBZMGRyntE0e9khAE5D_APTg5oIXLwgCzk",
-      authDomain: "task-income-161a3.firebaseapp.com",
-      projectId: "task-income-161a3",
-      storageBucket: "task-income-161a3.firebasestorage.app",
-      messagingSenderId: "599041213501",
-      appId: "1:599041213501:web:dc54b58a75bab86e921654"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    window.login = function() {
+    document.getElementById("login").addEventListener("click", async () => {
       const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          window.location.href = "dashboard.html";
-        })
-        .catch((error) => {
-          document.getElementById("error").innerText = error.message;
-        });
-    };
+      const pass = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        document.getElementById("msg").textContent = "Error: " + err.message;
+      }
+    });
   </script>
 </body>
 </html>
