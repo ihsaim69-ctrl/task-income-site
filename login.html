@@ -1,66 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Task Income</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Task Income Tracker</title>
   <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
     body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
+      background: radial-gradient(circle at top, #0a0a0a, #111);
       color: #fff;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
     }
-    form {
-      background: #161b22;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #000;
-      width: 300px;
+    .login-box {
+      background: #1c1c1c;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      text-align: center;
+      width: 320px;
     }
+    h2 { margin-bottom: 20px; font-size: 24px; }
     input {
       width: 100%;
       padding: 10px;
-      margin: 5px 0;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      background: #2b2b2b;
+      color: #fff;
     }
     button {
       width: 100%;
       padding: 10px;
-      background: #238636;
+      background: #007bff;
       border: none;
-      color: white;
-      border-radius: 5px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
       cursor: pointer;
+      transition: 0.3s;
     }
-    button:hover {
-      background: #2ea043;
-    }
+    button:hover { background: #0056d4; }
   </style>
 </head>
 <body>
-  <h2>Login / Register</h2>
-  <form onsubmit="saveUser(event)">
-    <input type="text" id="username" placeholder="Enter your username" required>
-    <input type="password" id="password" placeholder="Enter your password" required>
-    <button type="submit">Continue</button>
-  </form>
+  <div class="login-box">
+    <h2>Welcome Back 👋</h2>
+    <input type="text" id="username" placeholder="Enter your name" />
+    <button onclick="login()">Login</button>
+  </div>
 
   <script>
-    function saveUser(e) {
-      e.preventDefault();
-      const user = {
-        name: document.getElementById('username').value,
-        pass: document.getElementById('password').value
-      };
-      localStorage.setItem('taskUser', JSON.stringify(user));
-      alert('Welcome, ' + user.name + '! Login successful.');
-      window.location.href = "index.html";
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      if(username) {
+        localStorage.setItem('username', username);
+        window.location.href = 'dashboard.html';
+      } else {
+        alert('Please enter your name!');
+      }
     }
   </script>
 </body>
