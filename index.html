@@ -1,34 +1,81 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <title>Signup</title>
-  <script type="module">
-    import { app } from "./firebase.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    document.getElementById("signupBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      try {
-        const user = await createUserWithEmailAndPassword(auth, email, pass);
-        await setDoc(doc(db, "users", user.user.uid), { email, balance: 0 });
-        alert("Signup successful!");
-        window.location.href = "login.html";
-      } catch (e) {
-        alert(e.message);
-      }
-    });
-  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Task Income — Sign up / Login</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#0f1724;color:#fff;margin:0;display:flex;align-items:center;justify-content:center;height:100vh}
+    .card{width:360px;background:#12202b;border-radius:12px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,0.6)}
+    input{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #2b3a40;background:#0d1a20;color:#fff}
+    button{width:100%;padding:12px;border-radius:8px;border:none;background:#06b6d4;color:#032;font-weight:700;cursor:pointer}
+    a{color:#9ae6f3;text-decoration:none}
+    .small{font-size:13px;color:#9fb7bf}
+  </style>
 </head>
 <body>
-  <h2>Signup</h2>
-  <input type="email" id="email" placeholder="Email"><br>
-  <input type="password" id="password" placeholder="Password"><br>
-  <button id="signupBtn">Signup</button>
+  <div class="card">
+    <h2 style="margin:0 0 8px 0">লগইন / রেজিস্টার</h2>
+
+    <input id="email" type="email" placeholder="ইমেইল" />
+    <input id="password" type="password" placeholder="পাসওয়ার্ড (6+)" />
+    <button id="btnSignup">Create Account</button>
+    <button id="btnLogin" style="margin-top:8px;background:#34d399">Login</button>
+
+    <p class="small" id="msg" style="margin-top:12px"></p>
+    <p class="small" style="margin-top:8px">Already have account? <a href="#" id="toLogin">Use Login</a></p>
+  </div>
+
+  <script type="module">
+    import {
+      auth, db,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      setDoc, doc, serverTimestamp
+    } from "./firebase.js";
+
+    const emailEl = document.getElementById('email');
+    const passEl = document.getElementById('password');
+    const msgEl = document.getElementById('msg');
+    const btnSignup = document.getElementById('btnSignup');
+    const btnLogin = document.getElementById('btnLogin');
+
+    btnSignup.addEventListener('click', async () => {
+      const email = emailEl.value.trim();
+      const pass = passEl.value.trim();
+      if(!email || pass.length < 6) return msgEl.innerText = "সঠিক ইমেইল ও 6+ ক্যারেক্টারের পাসওয়ার্ড দিন";
+      try {
+        const u = await createUserWithEmailAndPassword(auth, email, pass);
+        // create user doc with default data
+        await setDoc(doc(db, "users", u.user.uid), {
+          email,
+          balance: 0,
+          points: 0,
+          role: "user",
+          createdAt: serverTimestamp()
+        });
+        msgEl.style.color = "lightgreen";
+        msgEl.innerText = "সাইনআপ সফল — রিডাইরেক্ট হচ্ছে...";
+        setTimeout(()=> location.href = "dashboard.html", 900);
+      } catch(e){
+        msgEl.style.color = "salmon"; msgEl.innerText = e.message;
+      }
+    });
+
+    btnLogin.addEventListener('click', async () => {
+      const email = emailEl.value.trim();
+      const pass = passEl.value.trim();
+      if(!email || !pass) return msgEl.innerText = "ইমেইল ও পাসওয়ার্ড লিখুন";
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        location.href = "dashboard.html";
+      } catch(e){
+        msgEl.style.color = "salmon"; msgEl.innerText = e.message;
+      }
+    });
+
+    // quick nav
+    document.getElementById('toLogin').addEventListener('click', ()=> { emailEl.focus(); });
+  </script>
 </body>
 </html>
