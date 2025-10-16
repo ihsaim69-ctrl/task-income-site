@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | Task Income Tracker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: #0f0f0f; color: #fff; min-height: 100vh; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    h1 { font-size: 22px; }
+    button { background: #ff4757; border: none; padding: 8px 16px; border-radius: 6px; color: #fff; cursor: pointer; }
+    .card {
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    input, select {
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      margin-right: 10px;
+      background: #2b2b2b;
+      color: #fff;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #333; }
+    th { color: #00aaff; }
+    .total { text-align: right; font-weight: bold; margin-top: 10px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hi, <span id="user"></span> 👋</h1>
+    <button onclick="logout()">Logout</button>
+  </header>
+
+  <div class="card">
+    <h2>Add Transaction</h2>
+    <input type="text" id="desc" placeholder="Description" />
+    <input type="number" id="amount" placeholder="Amount" />
+    <select id="type">
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+    <button onclick="addTransaction()">Add</button>
+  </div>
+
+  <div class="card">
+    <h2>Transaction History</h2>
+    <table>
+      <thead>
+        <tr><th>Description</th><th>Amount</th><th>Type</th></tr>
+      </thead>
+      <tbody id="list"></tbody>
+    </table>
+    <p class="total">Total Balance: <span id="balance">0</span>৳</p>
+  </div>
+
+  <script>
+    const user = localStorage.getItem('username');
+    if(!user) window.location.href = 'login.html';
+    document.getElementById('user').innerText = user;
+
+    let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+
+    function render() {
+      const list = document.getElementById('list');
+      const balanceEl = document.getElementById('balance');
+      list.innerHTML = '';
+      let balance = 0;
+
+      transactions.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${t.desc}</td><td>${t.amount}</td><td>${t.type}</td>`;
+        list.appendChild(tr);
+        balance += t.type === 'income' ? t.amount : -t.amount;
+      });
+      balanceEl.innerText = balance;
+    }
+
+    function addTransaction() {
+      const desc = document.getElementById('desc').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const type = document.getElementById('type').value;
+      if(!desc || isNaN(amount)) return alert('Enter valid details!');
+      transactions.push({desc, amount, type});
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+      document.getElementById('desc').value = '';
+      document.getElementById('amount').value = '';
+      render();
+    }
+
+    function logout() {
+      localStorage.removeItem('username');
+      window.location.href = 'login.html';
+    }
+
+    render();
+  </script>
+</body>
+</html>
