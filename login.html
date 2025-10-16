@@ -1,80 +1,44 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Task Income</title>
-  <style>
-    body{font-family:Poppins,Arial;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0}
-    .box{background:rgba(30,30,30,0.95);padding:28px;border-radius:12px;width:320px;box-shadow:0 6px 24px rgba(0,0,0,0.5)}
-    input{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;background:#2b2b2b;color:#fff}
-    button{width:100%;padding:10px;border-radius:6px;border:none;background:#00bcd4;color:#fff;font-weight:700;cursor:pointer}
-    .hint{font-size:13px;color:#ccc;margin-top:10px;text-align:center}
-  </style>
-  <!-- Firebase (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div class="box">
-    <h2 style="margin:0 0 10px 0;text-align:center">লগইন / রেজিস্টার</h2>
-    <input id="email" type="email" placeholder="ইমেইল" />
-    <input id="password" type="password" placeholder="পাসওয়ার্ড" />
-    <button id="btnLogin">Login / Register</button>
-    <p class="hint">নোট: প্রথমবার রেজিস্টার করলে একাউন্ট তৈরি হবে।</p>
-  </div>
+  <h2>Login</h2>
+  <input type="email" id="email" placeholder="Email"><br><br>
+  <input type="password" id="password" placeholder="Password"><br><br>
+  <button onclick="login()">Login</button>
+  <p id="error" style="color:red"></p>
 
-<script>
-/* ====== তোমার Firebase config (তুমি আগে দিয়েছিলে) ====== */
-const firebaseConfig = {
-  apiKey: "AIzaSyBZMGRyntE0e9khAE5D_APTg5oIXLwgCzk",
-  authDomain: "task-income-161a3.firebaseapp.com",
-  projectId: "task-income-161a3",
-  storageBucket: "task-income-161a3.firebasestorage.app",
-  messagingSenderId: "599041213501",
-  appId: "1:599041213501:web:dc54b58a75bab86e921654"
-};
-/* ========================================================= */
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZMGRyntE0e9khAE5D_APTg5oIXLwgCzk",
+      authDomain: "task-income-161a3.firebaseapp.com",
+      projectId: "task-income-161a3",
+      storageBucket: "task-income-161a3.firebasestorage.app",
+      messagingSenderId: "599041213501",
+      appId: "1:599041213501:web:dc54b58a75bab86e921654"
+    };
 
-document.getElementById('btnLogin').addEventListener('click', async () => {
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value.trim();
-  if(!email || !password) return alert('ইমেইল ও পাসওয়ার্ড ঢোকাও');
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-  try {
-    let userCred;
-    try {
-      userCred = await auth.signInWithEmailAndPassword(email, password);
-    } catch (e) {
-      // যদি সাইনইন না হয়, নতুন ইউজার তৈরি করো
-      userCred = await auth.createUserWithEmailAndPassword(email, password);
-    }
-
-    // ensure user doc
-    const uid = userCred.user.uid;
-    const uRef = db.collection('users').doc(uid);
-    const snap = await uRef.get();
-    if(!snap.exists){
-      await uRef.set({
-        displayName: email.split('@')[0],
-        email,
-        balance: 0,
-        points: 0,
-        role: 'user',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    // redirect to dashboard
-    window.location.href = 'dashboard.html';
-  } catch (err) {
-    alert(err.message || 'Error');
-  }
-});
-</script>
+    window.login = function() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          window.location.href = "dashboard.html";
+        })
+        .catch((error) => {
+          document.getElementById("error").innerText = error.message;
+        });
+    };
+  </script>
 </body>
 </html>
