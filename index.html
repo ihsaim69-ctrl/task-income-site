@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Redirecting...</title>
-  <script>
-    window.location.href = "login.html";
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Income - Signup</title>
 </head>
 <body>
-  <p>Redirecting to login page...</p>
+  <h2>Sign Up</h2>
+  <input id="email" type="email" placeholder="Email" /><br>
+  <input id="password" type="password" placeholder="Password" /><br>
+  <button id="signup">Create Account</button>
+  <p>Already have an account? <a href="login.html">Login</a></p>
+  <p id="msg" style="color:red;"></p>
+
+  <script type="module">
+    import { auth, createUserWithEmailAndPassword } from "./firebase.js";
+    const signupBtn = document.getElementById("signup");
+    const msg = document.getElementById("msg");
+
+    signupBtn.addEventListener("click", async () => {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+        msg.style.color = "green";
+        msg.textContent = "Signup successful! Redirecting...";
+        setTimeout(() => window.location.href = "dashboard.html", 1500);
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    });
+  </script>
 </body>
 </html>
