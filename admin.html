@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Task Income</title>
+  <style>
+    body{font-family:Poppins,Arial;background:#0b1220;color:#fff;padding:18px}
+    .card{background:#0f1724;padding:12px;border-radius:8px;margin-bottom:10px}
+    button{padding:8px 12px;border-radius:6px;border:none;cursor:pointer;margin-right:8px}
+    .approve{background:#16a34a;color:#fff}
+    .reject{background:#ef4444;color:#fff}
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <h2>Admin Panel</h2>
+  <div id="list"></div>
+  <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBZMGRyntE0e9khAE5D_APTg5oIXLwgCzk",
+  authDomain: "task-income-161a3.firebaseapp.com",
+  projectId: "task-income-161a3",
+  storageBucket: "task-income-161a3.firebasestorage.app",
+  messagingSenderId: "599041213501",
+  appId: "1:599041213501:web:dc54b58a75bab86e921654"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+auth.onAuthStateChanged(async user=>{
+  if(!user) return window.location.href='login.html';
+  const u = await db.collection('users').doc(user.uid).get();
+  const data = u.data();
+  if(!data || data.role !== 'admin') return alert('You are not admin');
+  loadRequests();
+});
+
+async function loadRequests(){
+  const q = await db.collection('withdraw_requests').where('status','==','pending').orderBy('createdAt','desc').get();
+  const list = document.getElementById('list'); list.innerHTML='';
+  q.forEach(snap=>{
+    const d = snap.data(); const id = snap.id;
+    const el = document.createElement('div'); el.className='card';
+    el.innerHTML = `<div><b>User:</b> ${d.userId} <b>Amount:</b> ${d.amount} <br/><small>${d.createdAt?.toDate ? d.createdAt.toDate() : ''}</small></div>
+      <div style="margin-top:8px">
+        <button class="approve" onclick="approve('${id}')">Approve (Mark Paid)</button>
+        <button class="reject" onclick="rejectReq('${id}')">Reject</button>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+async function approve(id){
+  const reqRef = db.collection('withdraw_requests').doc(id);
+  const req = (await reqRef.get()).data();
+  // mark paid
+  await reqRef.update({ status:'paid', paidAt: firebase.firestore.FieldValue.serverTimestamp(), approvedBy: auth.currentUser.uid });
+  // deduct user balance & add transaction
+  const uRef = db.collection('users').doc(req.userId);
+  await db.runTransaction(async tx=>{
+    const udoc = await tx.get(uRef);
+    const old = udoc.data().balance || 0;
+    tx.update(uRef, { balance: old - req.amount });
+    const tRef = db.collection('transactions').doc();
+    tx.set(tRef, { userId:req.userId, amount: req.amount, type:'withdraw', note:'admin paid', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  });
+  alert('Marked paid and balance updated');
+  loadRequests();
+}
+
+async function rejectReq(id){
+  await db.collection('withdraw_requests').doc(id).update({ status:'rejected' });
+  alert('Rejected');
+  loadRequests();
+}
+  </script>
+</body>
+</html>
