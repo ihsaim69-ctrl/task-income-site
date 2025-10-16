@@ -6,36 +6,38 @@
   <title>Dashboard - Task Income</title>
 </head>
 <body>
-  <h2>Welcome to your Dashboard 🎉</h2>
-  <button onclick="logout()">Logout</button>
+  <h2>Welcome to your Dashboard</h2>
+  <p id="userEmail"></p>
+  <p>Balance: <span id="balance">0</span> coins</p>
+  <button id="earn">Complete Task (Earn +10)</button><br><br>
+  <button id="logout">Logout</button>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+    import { auth, signOut } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBZMGRyntE0e9khAE5D_APTg5oIXLwgCzk",
-      authDomain: "task-income-161a3.firebaseapp.com",
-      projectId: "task-income-161a3",
-      storageBucket: "task-income-161a3.firebasestorage.app",
-      messagingSenderId: "599041213501",
-      appId: "1:599041213501:web:dc54b58a75bab86e921654"
-    };
+    let balance = 0;
+    const userEmail = document.getElementById("userEmail");
+    const balanceEl = document.getElementById("balance");
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        userEmail.textContent = "Logged in as: " + user.email;
+      } else {
         window.location.href = "login.html";
       }
     });
 
-    window.logout = function() {
-      signOut(auth).then(() => {
-        window.location.href = "login.html";
-      });
-    };
+    document.getElementById("earn").addEventListener("click", () => {
+      balance += 10;
+      balanceEl.textContent = balance;
+      alert("You earned 10 coins!");
+    });
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "login.html";
+    });
   </script>
 </body>
 </html>
