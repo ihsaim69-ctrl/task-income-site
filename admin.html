@@ -1,46 +1,71 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="bn">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin Panel</title>
+  <style>body{font-family:Arial;background:#071228;color:#fff;padding:12px} .card{background:#0f2b3b;padding:10px;border-radius:8px;margin-bottom:10px}</style>
+</head>
+<body>
+  <h2>Admin — Withdraw Requests</h2>
+  <div id="list"></div>
+
   <script type="module">
-    import { app } from "./firebase.js";
-    import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import { auth, db, onAuthStateChanged } from "./firebase.js";
+    import { collection, getDocs, query, where, updateDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 
-    const db = getFirestore(app);
+    // check admin role (we will require users/{uid}.role === 'admin')
+    onAuthStateChanged(auth, async user => {
+      if(!user) return location.href = 'index.html';
+      const uDoc = await getDoc(doc(db,'users',user.uid));
+      const role = uDoc.exists() ? uDoc.data().role : null;
+      if(role !== 'admin') return alert('Not an admin');
+      loadRequests();
+    });
 
-    async function loadRequests() {
-      const snap = await getDocs(collection(db, "withdrawRequests"));
-      const div = document.getElementById("requests");
-      div.innerHTML = "";
-      snap.forEach((d) => {
-        const data = d.data();
-        div.innerHTML += `
-          <p><b>${data.email}</b> requested ${data.amount} coins — <b>${data.status}</b></p>
-          <button onclick="approve('${d.id}')">Approve</button>
-          <button onclick="reject('${d.id}')">Reject</button>
-          <hr>
-        `;
+    async function loadRequests(){
+      const q = query(collection(db,'withdrawRequests'), where('status','==','pending'));
+      const snap = await getDocs(q);
+      const list = document.getElementById('list'); list.innerHTML = '';
+      snap.forEach(s => {
+        const d = s.data();
+        const id = s.id;
+        const el = document.createElement('div'); el.className='card';
+        el.innerHTML = `<div><b>${d.email}</b> wants ${d.amount} ৳ — <small>${d.createdAt?.toDate? d.createdAt.toDate() : ''}</small></div>
+          <div style="margin-top:8px">
+            <button onclick="approve('${id}')">Approve & Mark Paid</button>
+            <button onclick="reject('${id}')" style="margin-left:8px;background:#ef4444">Reject</button>
+          </div>`;
+        list.appendChild(el);
       });
     }
 
     window.approve = async (id) => {
-      await updateDoc(doc(db, "withdrawRequests", id), { status: "Approved" });
-      alert("Approved!");
+      // mark withdraw request paid + deduct balance + create transaction
+      const reqRef = doc(db,'withdrawRequests',id);
+      const reqSnap = await getDoc(reqRef);
+      const req = reqSnap.data();
+      if(!req) return alert('Not found');
+      // deduct from user's balance
+      const uRef = doc(db,'users', req.userId);
+      const uSnap = await getDoc(uRef);
+      const bal = uSnap.data().balance || 0;
+      // if balance is insufficient, admin can still mark paid (or reject)
+      await updateDoc(reqRef, { status:'approved', approvedAt: serverTimestamp() });
+      // deduct
+      await updateDoc(uRef, { balance: Math.max(0, bal - req.amount) });
+      // add a transaction record
+      await addDoc(collection(db,'transactions'), { userId: req.userId, amount: req.amount, type:'withdraw', note:'paid by admin', createdAt: serverTimestamp() });
+      alert('Approved & marked paid');
       loadRequests();
     };
 
     window.reject = async (id) => {
-      await updateDoc(doc(db, "withdrawRequests", id), { status: "Rejected" });
-      alert("Rejected!");
+      await updateDoc(doc(db,'withdrawRequests',id), { status:'rejected' });
+      alert('Rejected');
       loadRequests();
     };
-
-    loadRequests();
   </script>
-</head>
-<body>
-  <h2>Admin Panel</h2>
-  <div id="requests"></div>
 </body>
 </html>
