@@ -1,43 +1,71 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Task Income</title>
-</head>
-<body>
-  <h2>Welcome to your Dashboard</h2>
-  <p id="userEmail"></p>
-  <p>Balance: <span id="balance">0</span> coins</p>
-  <button id="earn">Complete Task (Earn +10)</button><br><br>
-  <button id="logout">Logout</button>
-
+  <title>User Dashboard</title>
   <script type="module">
-    import { auth, signOut } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    let balance = 0;
-    const userEmail = document.getElementById("userEmail");
-    const balanceEl = document.getElementById("balance");
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZMGRyntE0e9khAE5D_APTg5oIXLwgCzk",
+      authDomain: "task-income-161a3.firebaseapp.com",
+      projectId: "task-income-161a3",
+      storageBucket: "task-income-161a3.firebasestorage.app",
+      messagingSenderId: "599041213501",
+      appId: "1:599041213501:web:dc54b58a75bab86e921654"
+    };
 
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        userEmail.textContent = "Logged in as: " + user.email;
-      } else {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
         window.location.href = "login.html";
+        return;
+      }
+
+      document.getElementById("userEmail").innerText = user.email;
+
+      const userDoc = doc(db, "users", user.uid);
+      const snap = await getDoc(userDoc);
+      if (snap.exists()) {
+        document.getElementById("balance").innerText = snap.data().balance || 0;
+      } else {
+        await updateDoc(userDoc, { balance: 0 });
+        document.getElementById("balance").innerText = 0;
       }
     });
 
-    document.getElementById("earn").addEventListener("click", () => {
-      balance += 10;
-      balanceEl.textContent = balance;
-      alert("You earned 10 coins!");
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      signOut(auth);
     });
 
-    document.getElementById("logout").addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "login.html";
+    document.getElementById("withdrawBtn").addEventListener("click", async () => {
+      const user = auth.currentUser;
+      const amount = parseInt(prompt("Enter amount to withdraw:"));
+
+      if (amount && amount > 0) {
+        await addDoc(collection(db, "withdrawRequests"), {
+          userId: user.uid,
+          email: user.email,
+          amount,
+          status: "Pending",
+          time: new Date()
+        });
+        alert("Withdraw request sent!");
+      }
     });
   </script>
+</head>
+<body>
+  <h2>Welcome to Dashboard</h2>
+  <p>Logged in as: <span id="userEmail"></span></p>
+  <p>Balance: <span id="balance"></span> coins</p>
+
+  <button id="withdrawBtn">Withdraw</button>
+  <button id="logoutBtn">Logout</button>
 </body>
 </html>
