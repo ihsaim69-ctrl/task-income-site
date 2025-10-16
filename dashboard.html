@@ -1,107 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Free Task Income</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - Task Income</title>
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #0f172a;
-      color: white;
-      margin: 0;
-      padding: 0;
-    }
-    .header {
-      text-align: center;
-      background: #1e293b;
-      padding: 20px;
-      font-size: 22px;
-      font-weight: bold;
-    }
-    .container {
-      padding: 20px;
-      text-align: center;
-    }
-    .card {
-      background: #1e293b;
-      padding: 20px;
-      margin: 15px auto;
-      border-radius: 12px;
-      width: 85%;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-    }
-    .logout-btn {
-      background: #dc2626;
-      padding: 10px 20px;
-      border: none;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    .logout-btn:hover { background: #b91c1c; }
-    button {
-      background: #22c55e;
-      padding: 8px 16px;
-      border: none;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-    button:hover { background: #16a34a; }
+    :root{--bg:#0f1724;--card:#142032;--accent:#22c55e}
+    body{font-family:Poppins,Arial;background:var(--bg);color:#fff;margin:0;padding:18px}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    h1{font-size:18px;margin:0}
+    .card{background:var(--card);padding:16px;border-radius:10px;margin-bottom:12px;box-shadow:0 6px 18px rgba(0,0,0,0.4)}
+    button{background:var(--accent);border:none;color:#fff;padding:10px 14px;border-radius:8px;cursor:pointer}
+    .danger{background:#ef4444}
+    input{padding:8px;border-radius:6px;border:none;background:#0b1220;color:#fff;width:120px}
   </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <div class="header">💰 ফ্রি টাস্ক ইনকাম</div>
-
-  <div class="container">
-    <h2 id="welcomeUser"></h2>
-    <p>পয়েন্ট: <span id="points">0</span></p>
-
-    <div class="card">
-      <h3>প্রোফাইল পূরণ কর</h3>
-      <p>Complete করলে 10 পয়েন্ট!</p>
-      <button onclick="addPoints(10)">Complete</button>
+  <header>
+    <h1>Hi, <span id="userName">User</span></h1>
+    <div>
+      Balance: <strong id="bal">0</strong>৳
+      <button style="margin-left:12px" onclick="gotoAdmin()">Admin</button>
+      <button class="danger" onclick="logout()">Logout</button>
     </div>
+  </header>
 
-    <div class="card">
-      <h3>সোশ্যাল শেয়ার কর</h3>
-      <p>Complete করলে 15 পয়েন্ট!</p>
-      <button onclick="addPoints(15)">Complete</button>
-    </div>
-
-    <div class="card">
-      <h3>রিভিউ লিখ</h3>
-      <p>Complete করলে 20 পয়েন্ট!</p>
-      <button onclick="addPoints(20)">Complete</button>
-    </div>
-
-    <button class="logout-btn" onclick="logout()">লগআউট</button>
+  <div class="card">
+    <h3>প্রোফাইল পূরণ কর (১০ ৳)</h3>
+    <p>Complete করলে 10 ৳ যুক্ত হবে</p>
+    <button onclick="earn(10,'Profile complete')">Complete (10)</button>
   </div>
 
-  <script>
-    const user = localStorage.getItem('username');
-    if (!user) window.location.href = 'login.html';
-    document.getElementById('welcomeUser').innerText = `স্বাগতম, ${user}!`;
+  <div class="card">
+    <h3>সোশ্যাল শেয়ার কর (১৫ ৳)</h3>
+    <p>Complete করলে 15 ৳</p>
+    <button onclick="earn(15,'Shared social')">Complete (15)</button>
+  </div>
 
-    let points = localStorage.getItem('points') || 0;
-    document.getElementById('points').innerText = points;
+  <div class="card">
+    <h3>Withdraw Request</h3>
+    <input id="wamt" type="number" placeholder="Amount" /> <button onclick="requestWithdraw()">Request</button>
+    <p id="wmsg" style="color:#ccc;font-size:13px"></p>
+  </div>
 
-    function addPoints(p) {
-      points = parseInt(points) + p;
-      localStorage.setItem('points', points);
-      document.getElementById('points').innerText = points;
-      alert(`🎉 আপনি ${p} পয়েন্ট পেয়েছেন!`);
-    }
+<script>
+/* ========== firebaseConfig (তুমি দিয়েছিলে) ========== */
+const firebaseConfig = {
+  apiKey: "AIzaSyBZMGRyntE0e9khAE5D_APTg5oIXLwgCzk",
+  authDomain: "task-income-161a3.firebaseapp.com",
+  projectId: "task-income-161a3",
+  storageBucket: "task-income-161a3.firebasestorage.app",
+  messagingSenderId: "599041213501",
+  appId: "1:599041213501:web:dc54b58a75bab86e921654"
+};
+/* ====================================================== */
 
-    function logout() {
-      localStorage.removeItem('username');
-      window.location.href = 'login.html';
-    }
-  </script>
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUserDoc = null;
+
+auth.onAuthStateChanged(async user => {
+  if(!user) return window.location.href='login.html';
+  document.getElementById('userName').innerText = user.email.split('@')[0];
+  const uref = db.collection('users').doc(user.uid);
+  await ensureUserDoc(uref,user);
+  const snap = await uref.get(); currentUserDoc = snap.data();
+  updateBalanceDisplay();
+});
+
+async function ensureUserDoc(uref,user){
+  const s = await uref.get();
+  if(!s.exists){
+    await uref.set({ displayName: user.email.split('@')[0], email: user.email, balance:0, points:0, role:'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+}
+
+function updateBalanceDisplay(){
+  const bal = currentUserDoc?.balance || 0;
+  document.getElementById('bal').innerText = bal;
+}
+
+async function earn(amount,note){
+  const user = auth.currentUser;
+  if(!user) return alert('Not logged in');
+  const uRef = db.collection('users').doc(user.uid);
+  await db.runTransaction(async tx => {
+    const uDoc = await tx.get(uRef);
+    const old = uDoc.data().balance || 0;
+    tx.update(uRef,{ balance: old + amount, points: (uDoc.data().points||0) + amount });
+    const tRef = db.collection('transactions').doc();
+    tx.set(tRef, { userId:user.uid, amount, type:'earn', note, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  });
+  const fresh = await uRef.get(); currentUserDoc = fresh.data();
+  updateBalanceDisplay();
+  alert('✅ আপনি ' + amount + '৳ পেয়েছেন');
+}
+
+async function requestWithdraw(){
+  const amt = parseFloat(document.getElementById('wamt').value);
+  if(isNaN(amt) || amt <= 0) return alert('Amount লিখুন');
+  const user = auth.currentUser; if(!user) return alert('Not logged in');
+  const uRef = db.collection('users').doc(user.uid);
+  const uDoc = await uRef.get();
+  const bal = uDoc.data().balance || 0;
+  if(amt > bal) return alert('Balance কম আছে');
+  await db.collection('withdraw_requests').add({ userId:user.uid, amount: amt, status:'pending', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  document.getElementById('wmsg').innerText = 'Withdraw request পাঠানো হয়েছে — admin অনুমোদন করবে';
+}
+
+function logout(){ auth.signOut().then(()=>location.href='login.html'); }
+
+function gotoAdmin(){
+  // আপনি যদি admin হন তাহলে admin.html খুলবে, নাহলে alert
+  window.location.href = 'admin.html';
+}
+</script>
 </body>
 </html>
